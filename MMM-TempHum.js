@@ -92,7 +92,7 @@ Module.register("MMM-TempHum", {
             
             const presUnit = document.createElement("span");
             presUnit.className = "unit";
-            presUnit.innerHTML = "%";
+            presUnit.innerHTML = "mmHg";
             
             presDiv.appendChild(presValue);
             presDiv.appendChild(presUnit);
@@ -157,7 +157,7 @@ Module.register("MMM-TempHum", {
         
         this.temperature = temperature;
         this.humidity = humidity;
-        this.pressure = pressure;
+        this.pressure = pressure * 0.750062;
         this.error = null;
         this.loaded = true;
         
