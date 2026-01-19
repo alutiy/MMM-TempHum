@@ -1,0 +1,42 @@
+.dht-sensor-wrapper {
+    text-align: center;
+}
+
+.dht-sensor-wrapper .title {
+    margin-bottom: 10px;
+    font-size: 1.2em;
+}
+
+.dht-data {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.dht-data .temperature,
+.dht-data .humidity {
+    display: flex;
+    align-items: baseline;
+    gap: 3px;
+}
+
+.dht-data .value {
+    font-size: 1.5em;
+    line-height: 1;
+}
+
+.dht-data .unit {
+    font-size: 0.8em;
+    opacity: 0.8;
+}
+
+.error {
+    color: #ff5555;
+    font-size: 0.9em;
+}
+
+.loading {
+    color: #888;
+    font-style: italic;
+}
