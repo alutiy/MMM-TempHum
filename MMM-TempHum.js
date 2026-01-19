@@ -114,7 +114,7 @@ Module.register("MMM-TempHum", {
             })
             .catch(error => {
                 console.error(`[${self.name}] Ошибка получения данных:`, error);
-                self.error = `Ошибка подключения: ${error.message}`;
+                self.error = `Ошибка подключения к ${this.config.apiUrl}: ${error.message}`;
                 self.loaded = true;
                 self.updateDom(self.config.animationSpeed);
                 
