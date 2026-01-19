@@ -8,8 +8,7 @@ Module.register("MMM-TempHum", {
         temperatureUnit: "C", // C или F
         title: "Температура и влажность",
         decimals: 1,
-        retryDelay: 5000,
-        useRelativeUrl: false // Если true, используется относительный URL
+        retryDelay: 5000
     },
 
     start: function() {
