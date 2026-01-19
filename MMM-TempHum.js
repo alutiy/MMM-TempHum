@@ -1,14 +1,16 @@
 Module.register("MMM-TempHum", {
     defaults: {
-        updateInterval: 30000, // 30 секунд
+        updateInterval: 30000,
         animationSpeed: 2000,
         apiUrl: "http://192.168.1.41/data",
         showHumidity: true,
         showTemperature: true,
-        temperatureUnit: "C", // C или F
+        temperatureUnit: "C",
         title: "Температура и влажность",
         decimals: 1,
-        retryDelay: 5000
+        retryDelay: 5000,
+        useRelativeUrl: false,
+        debug: true // Добавим режим отладки
     },
 
     start: function() {
@@ -17,6 +19,7 @@ Module.register("MMM-TempHum", {
         this.humidity = null;
         this.loaded = false;
         this.error = null;
+        this.lastUpdate = null;
         this.scheduleUpdate();
     },
 
@@ -28,17 +31,30 @@ Module.register("MMM-TempHum", {
         const wrapper = document.createElement("div");
         wrapper.className = "dht-sensor-wrapper";
         
+        // Добавим отладочную информацию если включен debug
+        if (this.config.debug && this.lastUpdate) {
+            const debugInfo = document.createElement("div");
+            debugInfo.className = "debug-info dimmed small";
+            debugInfo.innerHTML = `Last update: ${this.lastUpdate.toLocaleTimeString()}`;
+            wrapper.appendChild(debugInfo);
+        }
+        
         if (this.error) {
-            wrapper.innerHTML = `<div class="error">${this.error}</div>`;
+            const errorDiv = document.createElement("div");
+            errorDiv.className = "error";
+            errorDiv.innerHTML = this.error;
+            wrapper.appendChild(errorDiv);
             return wrapper;
         }
         
         if (!this.loaded) {
-            wrapper.innerHTML = `<div class="loading">Загрузка...</div>`;
+            const loadingDiv = document.createElement("div");
+            loadingDiv.className = "loading";
+            loadingDiv.innerHTML = "Загрузка...";
+            wrapper.appendChild(loadingDiv);
             return wrapper;
         }
 
-        // Заголовок
         if (this.config.title) {
             const title = document.createElement("div");
             title.className = "title bright medium";
@@ -49,7 +65,6 @@ Module.register("MMM-TempHum", {
         const dataContainer = document.createElement("div");
         dataContainer.className = "dht-data";
         
-        // Температура
         if (this.config.showTemperature && this.temperature !== null) {
             const tempDiv = document.createElement("div");
             tempDiv.className = "temperature";
@@ -67,7 +82,6 @@ Module.register("MMM-TempHum", {
             dataContainer.appendChild(tempDiv);
         }
         
-        // Влажность
         if (this.config.showHumidity && this.humidity !== null) {
             const humDiv = document.createElement("div");
             humDiv.className = "humidity";
@@ -95,74 +109,115 @@ Module.register("MMM-TempHum", {
             self.updateData();
         }, this.config.updateInterval);
         
-        this.updateData();
+        // Задержка перед первым запросом
+        setTimeout(() => {
+            self.updateData();
+        }, 1000);
     },
 
     updateData: function() {
         const self = this;
-        const url = this.config.apiUrl;
+        const url = this.config.useRelativeUrl ? 
+            `/data` : 
+            this.config.apiUrl;
         
-        fetch(url)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                self.processData(data);
-            })
-            .catch(error => {
-                console.error(`[${self.name}] Ошибка получения данных:`, error);
-                self.error = `Ошибка подключения к ${this.config.apiUrl}: ${error.message}`;
-                self.loaded = true;
-                self.updateDom(self.config.animationSpeed);
-                
-                // Повторная попытка через retryDelay
-                setTimeout(() => self.updateData(), self.config.retryDelay);
-            });
+        if (this.config.debug) {
+            console.log(`[${this.name}] Запрашиваю данные с: ${url}`);
+        }
+        
+        // Добавляем таймаут для запроса
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        
+        fetch(url, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            signal: controller.signal,
+            mode: 'cors', // Важно для кросс-доменных запросов
+            cache: 'no-cache'
+        })
+        .then(response => {
+            clearTimeout(timeoutId);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Ответ не в формате JSON');
+            }
+            
+            return response.json();
+        })
+        .then(data => {
+            if (this.config.debug) {
+                console.log(`[${this.name}] Получены данные:`, data);
+            }
+            self.processData(data);
+        })
+        .catch(error => {
+            clearTimeout(timeoutId);
+            
+            let errorMessage = '';
+            if (error.name === 'AbortError') {
+                errorMessage = 'Таймаут запроса (10 сек)';
+            } else if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+                errorMessage = 'Ошибка сети: сервер недоступен';
+            } else {
+                errorMessage = error.message;
+            }
+            
+            console.error(`[${self.name}] Ошибка получения данных:`, error);
+            
+            self.error = errorMessage;
+            self.loaded = true;
+            self.lastUpdate = new Date();
+            self.updateDom(self.config.animationSpeed);
+            
+            // Повторная попытка
+            setTimeout(() => self.updateData(), self.config.retryDelay);
+        });
     },
 
     processData: function(data) {
-        // Ожидаем JSON вида: {"temperature": 23.5, "humidity": 45.2}
-        // Или возможно с другими названиями полей
-        
         let temperature = null;
         let humidity = null;
         
-        // Проверяем различные варианты названий полей
-        if (data.temperature !== undefined) {
-            temperature = parseFloat(data.temperature);
-        } else if (data.temp !== undefined) {
-            temperature = parseFloat(data.temp);
-        } else if (data.Temperature !== undefined) {
-            temperature = parseFloat(data.Temperature);
-        }
-        
-        if (data.humidity !== undefined) {
-            humidity = parseFloat(data.humidity);
-        } else if (data.hum !== undefined) {
-            humidity = parseFloat(data.hum);
-        } else if (data.Humidity !== undefined) {
-            humidity = parseFloat(data.Humidity);
-        }
-        
-        // Если данные в градусах Фаренгейта, конвертируем в Цельсий
-        if (this.config.temperatureUnit === "C" && temperature !== null) {
-            // Проверяем, не являются ли данные уже в Цельсиях
-            if (temperature > 100) { // Предполагаем, что это Фаренгейт
-                temperature = (temperature - 32) * 5/9;
+        // Пробуем найти температуру в разных форматах
+        const tempKeys = ['temperature', 'temp', 'Temperature', 'TEMPERATURE'];
+        for (const key of tempKeys) {
+            if (data[key] !== undefined && data[key] !== null) {
+                temperature = parseFloat(data[key]);
+                break;
             }
+        }
+        
+        // Пробуем найти влажность в разных форматах
+        const humKeys = ['humidity', 'hum', 'Humidity', 'HUMIDITY'];
+        for (const key of humKeys) {
+            if (data[key] !== undefined && data[key] !== null) {
+                humidity = parseFloat(data[key]);
+                break;
+            }
+        }
+        
+        // Логируем что нашли
+        if (this.config.debug) {
+            console.log(`[${this.name}] Найдены данные - Температура: ${temperature}, Влажность: ${humidity}`);
         }
         
         this.temperature = temperature;
         this.humidity = humidity;
         this.error = null;
         this.loaded = true;
+        this.lastUpdate = new Date();
         
         this.updateDom(this.config.animationSpeed);
         
-        // Отправляем уведомления для других модулей
         if (temperature !== null) {
             this.sendNotification("DHT_TEMPERATURE", temperature);
         }
@@ -176,7 +231,6 @@ Module.register("MMM-TempHum", {
         
         let formattedTemp = temp;
         
-        // Конвертируем в Фаренгейт если нужно
         if (this.config.temperatureUnit === "F") {
             formattedTemp = (temp * 9/5) + 32;
         }
@@ -190,7 +244,10 @@ Module.register("MMM-TempHum", {
 
     notificationReceived: function(notification, payload, sender) {
         if (notification === "DOM_OBJECTS_CREATED") {
-            this.updateData();
+            // Ждем немного перед первым запросом
+            setTimeout(() => {
+                this.updateData();
+            }, 2000);
         }
     }
 });
