@@ -1,12 +1,13 @@
 {
-    module: "MMM-TempHum",
-    position: "bottom_right",
+    module: "MMM-DHT-Sensor",
+    position: "top_right",
     config: {
-        updateInterval: 30000,
         apiUrl: "http://192.168.1.41/data",
+        updateInterval: 30000,
         temperatureUnit: "C",
         showHumidity: true,
         showTemperature: true,
-        title: "Комната"
+        title: "Комната",
+        decimals: 1
     }
 }
