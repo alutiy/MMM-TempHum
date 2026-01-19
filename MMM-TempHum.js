@@ -1,4 +1,4 @@
-Module.register("MMM-TempHum", {
+Module.register("MMM-DHT-Sensor", {
     defaults: {
         updateInterval: 30000,
         animationSpeed: 2000,
@@ -8,16 +8,17 @@ Module.register("MMM-TempHum", {
         showPressure: false,
         temperatureUnit: "C",
         pressureUnit: "hPa",
-        title: "Датчик",
+        title: "Метео",
         decimals: 1,
-        showIcons: true, // Новая опция для показа иконок
-        iconSize: "20px", // Размер иконок
-        useCustomIcons: false, // Использовать кастомные иконки
+        showIcons: true,
+        iconSize: "20px",
+        useCustomIcons: false,
         customIcons: {
             temperature: "fa-thermometer-half",
             humidity: "fa-tint",
             pressure: "fa-tachometer-alt"
-        }
+        },
+        style: "default" // default, minimalist, cards
     },
 
     start: function() {
@@ -31,8 +32,8 @@ Module.register("MMM-TempHum", {
 
     getStyles: function() {
         return [
-            "MMM-TempHum.css",
-            "font-awesome.css" // Подключаем Font Awesome для иконок
+            "MMM-DHT-Sensor.css",
+            "font-awesome.css"
         ];
     },
 
@@ -58,7 +59,7 @@ Module.register("MMM-TempHum", {
         }
 
         const dataContainer = document.createElement("div");
-        dataContainer.className = "dht-data";
+        dataContainer.className = `dht-data ${this.config.style}`;
         
         if (this.config.showTemperature && this.temperature !== null) {
             dataContainer.appendChild(this.createTemperatureElement());
@@ -102,6 +103,12 @@ Module.register("MMM-TempHum", {
         valueContainer.appendChild(tempUnit);
         tempDiv.appendChild(valueContainer);
         
+        // Добавляем анимацию обновления
+        setTimeout(() => {
+            tempDiv.classList.add('updating');
+            setTimeout(() => tempDiv.classList.remove('updating'), 1000);
+        }, 100);
+        
         return tempDiv;
     },
 
@@ -130,6 +137,11 @@ Module.register("MMM-TempHum", {
         valueContainer.appendChild(humValue);
         valueContainer.appendChild(humUnit);
         humDiv.appendChild(valueContainer);
+        
+        setTimeout(() => {
+            humDiv.classList.add('updating');
+            setTimeout(() => humDiv.classList.remove('updating'), 1000);
+        }, 200);
         
         return humDiv;
     },
@@ -160,6 +172,11 @@ Module.register("MMM-TempHum", {
         valueContainer.appendChild(presUnit);
         presDiv.appendChild(valueContainer);
         
+        setTimeout(() => {
+            presDiv.classList.add('updating');
+            setTimeout(() => presDiv.classList.remove('updating'), 1000);
+        }, 300);
+        
         return presDiv;
     },
 
@@ -167,32 +184,14 @@ Module.register("MMM-TempHum", {
         if (this.config.useCustomIcons && this.config.customIcons.temperature) {
             return `<i class="fas ${this.config.customIcons.temperature}"></i>`;
         }
-        // Иконка меняется в зависимости от температуры
-        if (this.temperature < 0) {
-            return `<i class="fas fa-thermometer-empty"></i>`;
-        } else if (this.temperature < 15) {
-            return `<i class="fas fa-thermometer-quarter"></i>`;
-        } else if (this.temperature < 25) {
-            return `<i class="fas fa-thermometer-half"></i>`;
-        } else if (this.temperature < 35) {
-            return `<i class="fas fa-thermometer-three-quarters"></i>`;
-        } else {
-            return `<i class="fas fa-thermometer-full"></i>`;
-        }
+        return `<i class="fas fa-thermometer-half"></i>`;
     },
 
     getHumidityIcon: function() {
         if (this.config.useCustomIcons && this.config.customIcons.humidity) {
             return `<i class="fas ${this.config.customIcons.humidity}"></i>`;
         }
-        // Иконка меняется в зависимости от влажности
-        if (this.humidity < 30) {
-            return `<i class="fas fa-tint"></i>`;
-        } else if (this.humidity < 60) {
-            return `<i class="fas fa-tint"></i>`;
-        } else {
-            return `<i class="fas fa-tint"></i>`;
-        }
+        return `<i class="fas fa-tint"></i>`;
     },
 
     getPressureIcon: function() {
@@ -238,21 +237,18 @@ Module.register("MMM-TempHum", {
         let humidity = null;
         let pressure = null;
         
-        // Температура
         if (data.temperature !== undefined) {
             temperature = parseFloat(data.temperature);
         } else if (data.temp !== undefined) {
             temperature = parseFloat(data.temp);
         }
         
-        // Влажность
         if (data.humidity !== undefined) {
             humidity = parseFloat(data.humidity);
         } else if (data.hum !== undefined) {
             humidity = parseFloat(data.hum);
         }
         
-        // Давление
         if (data.pressure !== undefined) {
             pressure = parseFloat(data.pressure);
         } else if (data.pres !== undefined) {
@@ -261,7 +257,6 @@ Module.register("MMM-TempHum", {
             pressure = parseFloat(data.pressure_hpa);
         }
         
-        // Конвертация температуры
         if (this.config.temperatureUnit === "C" && temperature !== null && temperature > 100) {
             temperature = (temperature - 32) * 5/9;
         }
@@ -274,14 +269,13 @@ Module.register("MMM-TempHum", {
         
         this.updateDom(this.config.animationSpeed);
         
-        // Отправка уведомлений
         if (temperature !== null) this.sendNotification("DHT_TEMPERATURE", temperature);
         if (humidity !== null) this.sendNotification("DHT_HUMIDITY", humidity);
         if (pressure !== null) this.sendNotification("DHT_PRESSURE", pressure);
     },
 
     formatTemperature: function(temp) {
-        if (temp === null) return "N/A";
+        if (temp === null) return "--";
         
         let formattedTemp = temp;
         
@@ -293,7 +287,7 @@ Module.register("MMM-TempHum", {
     },
 
     formatPressure: function(pres) {
-        if (pres === null) return "N/A";
+        if (pres === null) return "--";
         
         let formattedPres = pres;
         
