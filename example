@@ -1,13 +1,16 @@
 {
-    module: "MMM-DHT-Sensor",
+    module: "MMM-TempHum",
     position: "top_right",
     config: {
         apiUrl: "http://192.168.1.41/data",
-        updateInterval: 30000,
-        temperatureUnit: "C",
-        showHumidity: true,
         showTemperature: true,
+        showHumidity: true,
+        showPressure: false,
+        showIcons: true,
+        temperatureUnit: "C",
         title: "На улице",
         decimals: 1
-    }
+    },
+    // Добавляем класс для компактного вида
+    classes: "compact"
 }

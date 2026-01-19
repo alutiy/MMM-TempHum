@@ -1,42 +1,126 @@
 .dht-sensor-wrapper {
     text-align: center;
+    font-family: Arial, sans-serif;
 }
 
 .dht-sensor-wrapper .title {
-    margin-bottom: 10px;
-    font-size: 1.2em;
+    margin-bottom: 15px;
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .dht-data {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 8px;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px;
 }
 
 .dht-data .temperature,
-.dht-data .humidity {
+.dht-data .humidity,
+.dht-data .pressure {
     display: flex;
-    align-items: baseline;
-    gap: 3px;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
 }
 
-.dht-data .value {
-    font-size: 1.5em;
-    line-height: 1;
-}
-
-.dht-data .unit {
-    font-size: 0.8em;
+.dht-data .icon {
+    font-size: 20px;
+    width: 30px;
+    text-align: center;
+    color: #aad;
     opacity: 0.8;
 }
 
+.dht-data .value-container {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+}
+
+.dht-data .value {
+    font-size: 1.4em;
+    line-height: 1;
+    font-weight: 400;
+    color: #fff;
+    min-width: 60px;
+    text-align: right;
+}
+
+.dht-data .unit {
+    font-size: 0.85em;
+    opacity: 0.8;
+    color: #ccc;
+    min-width: 50px;
+    text-align: left;
+}
+
+.dht-data .temperature .icon {
+    color: #ff6b6b;
+}
+
+.dht-data .humidity .icon {
+    color: #4dabf7;
+}
+
+.dht-data .pressure .icon {
+    color: #51cf66;
+}
+
 .error {
-    color: #ff5555;
+    color: #ff6b6b;
     font-size: 0.9em;
+    padding: 10px;
+    background-color: rgba(255, 107, 107, 0.1);
+    border-radius: 5px;
+    border-left: 3px solid #ff6b6b;
 }
 
 .loading {
-    color: #888;
+    color: #aaa;
+    font-size: 0.9em;
     font-style: italic;
+    padding: 10px;
+}
+
+/* Альтернативный компактный стиль */
+.dht-data.compact {
+    flex-direction: row;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.dht-data.compact .temperature,
+.dht-data.compact .humidity,
+.dht-data.compact .pressure {
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    width: auto;
+}
+
+.dht-data.compact .icon {
+    font-size: 24px;
+    margin-bottom: 5px;
+}
+
+.dht-data.compact .value-container {
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.dht-data.compact .value {
+    font-size: 1.6em;
+    min-width: auto;
+}
+
+.dht-data.compact .unit {
+    font-size: 0.8em;
 }
