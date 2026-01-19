@@ -7,7 +7,7 @@
         temperatureUnit: "C",
         showHumidity: true,
         showTemperature: true,
-        title: "Комната",
+        title: "На улице",
         decimals: 1
     }
 }

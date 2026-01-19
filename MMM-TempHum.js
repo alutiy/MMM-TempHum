@@ -5,6 +5,7 @@ Module.register("MMM-TempHum", {
         apiUrl: "http://192.168.1.41/data",
         showHumidity: true,
         showTemperature: true,
+        showPressure: true,
         temperatureUnit: "C",
         title: "Температура и влажность",
         decimals: 1
@@ -13,6 +14,7 @@ Module.register("MMM-TempHum", {
     start: function() {
         this.temperature = null;
         this.humidity = null;
+        this.pressure = null;
         this.loaded = false;
         this.error = null;
         this.scheduleUpdate();
@@ -79,6 +81,23 @@ Module.register("MMM-TempHum", {
             humDiv.appendChild(humUnit);
             dataContainer.appendChild(humDiv);
         }
+
+        if (this.config.showPressure && this.pressure !== null) {
+            const presDiv = document.createElement("div");
+            presDiv.className = "pressure";
+            
+            const presValue = document.createElement("span");
+            presValue.className = "value bright";
+            presValue.innerHTML = this.pressure.toFixed(this.config.decimals);
+            
+            const presUnit = document.createElement("span");
+            presUnit.className = "unit";
+            presUnit.innerHTML = "%";
+            
+            presDiv.appendChild(presValue);
+            presDiv.appendChild(presUnit);
+            dataContainer.appendChild(presDiv);
+        }
         
         wrapper.appendChild(dataContainer);
         return wrapper;
@@ -118,17 +137,18 @@ Module.register("MMM-TempHum", {
     processData: function(data) {
         let temperature = null;
         let humidity = null;
+        let pressure = null;
         
         if (data.temperature !== undefined) {
             temperature = parseFloat(data.temperature);
-        } else if (data.temp !== undefined) {
-            temperature = parseFloat(data.temp);
         }
         
         if (data.humidity !== undefined) {
             humidity = parseFloat(data.humidity);
-        } else if (data.hum !== undefined) {
-            humidity = parseFloat(data.hum);
+        }
+
+        if (data.pressure !== undefined) {
+            pressure = parseFloat(data.pressure);
         }
         
         if (this.config.temperatureUnit === "C" && temperature !== null && temperature > 100) {
@@ -137,6 +157,7 @@ Module.register("MMM-TempHum", {
         
         this.temperature = temperature;
         this.humidity = humidity;
+        this.pressure = pressure;
         this.error = null;
         this.loaded = true;
         
@@ -147,6 +168,10 @@ Module.register("MMM-TempHum", {
         }
         if (humidity !== null) {
             this.sendNotification("DHT_HUMIDITY", humidity);
+        }
+
+        if (pressure !== null) {
+            this.sendNotification("DHT_PRESSURE", pressure);
         }
     },
 
