@@ -101,9 +101,7 @@ Module.register("MMM-TempHum", {
 
     updateData: function() {
         const self = this;
-        const url = this.config.useRelativeUrl ? 
-            `/data` : // если работает на том же хосте
-            this.config.apiUrl;
+        const url = this.config.apiUrl;
         
         fetch(url)
             .then(response => {

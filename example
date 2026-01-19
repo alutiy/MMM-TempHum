@@ -1,0 +1,12 @@
+{
+    module: "MMM-TempHum",
+    position: "bottom_right",
+    config: {
+        updateInterval: 30000,
+        apiUrl: "http://192.168.1.41/data",
+        temperatureUnit: "C",
+        showHumidity: true,
+        showTemperature: true,
+        title: "Комната"
+    }
+}
