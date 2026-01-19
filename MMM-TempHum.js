@@ -1,4 +1,4 @@
-Module.register("MMM-DHT-Sensor", {
+Module.register("MMM-TempHum", {
     defaults: {
         updateInterval: 30000,
         animationSpeed: 2000,
@@ -19,7 +19,7 @@ Module.register("MMM-DHT-Sensor", {
     },
 
     getStyles: function() {
-        return ["MMM-DHT-Sensor.css"];
+        return ["MMM-TempHum.css"];
     },
 
     getDom: function() {
